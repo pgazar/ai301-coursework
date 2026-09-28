@@ -48,7 +48,7 @@ The issue body is terse ("Including remove identity, fuse spiders, remove self l
 
 Quoting `issue-has-spec` as it currently reads in my uploaded `rubric.md`:
 
-> "The issue includes a written spec, acceptance criteria, or otherwise concrete description of the expected change. A terse body still counts if it names specific, concrete items AND the issue was opened by a maintainer/collaborator or carries a 'good first issue' label. A vague one-line body with neither of those signals does not count"
+> "The issue includes a written spec, acceptance criteria, or otherwise concrete description of the expected change. A terse body still counts if it names specific, concrete items AND the issue was opened by a maintainer/collaborator or carries a "good first issue" label. A vague one-line body with neither of those signals does not count"
 
 This check exists because my personal preference (wanting a written spec before committing to an issue) initially clashed with the course's own philosophy in `evidence-guide.md`: a terse body isn't automatically a red flag if it comes from someone credible or is pre-vetted with a "good first issue" label. The wording above is the compromise — it still requires something concrete, but no longer requires formal spec formatting.
 
