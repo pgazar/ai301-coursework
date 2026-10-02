@@ -43,11 +43,12 @@ packages designed around that family.
 
 | Check | Evidence | Pass condition | Weight |
 |---|---|---|---|
-|  |  |  |  |
+| env-recorded | The repro report's `Environment:` line, compared against the issue's own stated version/environment | Names the tool version and OS the issue's repo asks for (per its bug template), and either matches the issue's target version or explicitly says why it doesn't | required |
+| steps-followable | The repro report's Steps section | A stranger could re-run them without guessing: starts from a stated, reachable starting point (e.g. "fresh clone"), gives concrete commands in order. A step that says "run the command" without naming the command does not count | required |
+| behavior-matches | The artifact (output/log excerpt) in the repro report, read against the issue's stated expected vs. actual behavior | When the report claims to have reproduced the issue's behavior, the artifact must show the *same* failure the issue describes (same error type, exit code, or message) — not a different, adjacent failure that happens to also be broken. When the report honestly concludes it could not reproduce the issue, backed by a genuine, detailed attempt, this check passes without needing a matching artifact; that scenario is graded by `honesty` instead, which checks the cannot-reproduce conclusion is itself backed by real evidence of the attempt | required |
+| honesty | The repro report's stated conclusion, read against what its own artifact actually shows | The report claims only what its evidence supports. An honest, evidenced "could not reproduce" is a pass. A confident claim of reproduction whose artifact shows a different failure, or asserts behavior no artifact shows, is a fail | required |
+| comms | The claim comment and repro comment text, read against the repo's stated contribution policy / AI-use disclosure requirement (repo-facts block or CONTRIBUTING.md/AI_POLICY.md), and against the issue itself | First, determine from the repo facts whether the policy requires disclosing AI assistance (a strict policy states this explicitly, e.g. "all AI usage must be disclosed"). If it does, search the full text of both the claim comment and the repro comment for an actual disclosure statement naming that AI was used. If the policy requires disclosure and no such statement appears anywhere in either comment, this check FAILS regardless of how strong the rest of the comment is — this is a hard, standalone failure condition, not one factor among several. If the policy has no disclosure requirement or is silent, grade only the remaining criteria: the comment names the specific version and behavior (not "this bug"), makes no promised timeline, and reads like something a person would actually say | required |
 
 ## Verdict rule
 
-<!-- State how the grades above combine into accept or reject, and how
-unclear is treated. Example shape (write your own): "accept if every
-required check passes; preferred checks never change the verdict;
-unclear counts as fail." -->
+Accept (ready) only if every required check that applies passes. Reject (hold) if any applicable required check fails, or if any applicable required check is unclear. In claim-only mode, checks marked "not yet applicable: claim-only draft" are excluded from this rule entirely, per SKILL.md's claim-only workflow — the verdict there answers only whether the claim comment itself is ready.
