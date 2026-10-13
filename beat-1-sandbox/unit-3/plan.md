@@ -44,3 +44,5 @@ Re-running the Unit 2 repro steps against the fix:
 ## Deviations
 
 Nothing changed between this plan and the build. The `isinstance(data, dict)` guard landed at both `json.loads` call sites exactly as described, `_parse_json_output` and `_parse_plaintext_output` were left untouched, the `xfail` marker was removed from `test_json_array_fallback`, and `test_json_array_in_fence_fallback` was added as planned. The full test suite (20 tests) passes.
+
+One addition not called out in the original Approach: each guard logs a `json_fence_not_a_dict` / `raw_json_not_a_dict` warning when it catches a non-dict value, following the file's existing structured-logging pattern. This is a small, in-scope addition (observability for the new branch, not a behavior change) and is listed in the PR description's Changes section.
