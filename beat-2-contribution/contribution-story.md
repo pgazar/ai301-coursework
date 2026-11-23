@@ -219,17 +219,43 @@ Deviations: My first release note said "numeric," which was too broad because it
 
 ## Testing Strategy
 
-[What observable checks prove the fix: your reproduction steps re-run
-against the built change (before and after), and the repo's own test
-suite or checks with the outcome shown. "Tests pass" with nothing
-observable named is not a strategy.]
+I used two observable checks, both run on my source build (`3.2.0.dev0+737.g717bcd3eda`, branch `fix-groupby-ohlc-arrow`).
+
+**Check 1: the reproduction, re-run before and after the fix**
+
+```python
+ser = pd.Series([1.0, 2.0, 3.0], dtype="float64[pyarrow]")
+ser.groupby(["a", "a", "b"]).ohlc()
+```
+
+- Before (main): `ValueError: Mask must be 1D array`.
+- After (my branch): the table is returned, and the columns keep the input dtype:
+
+```text
+float64[pyarrow] -> ['double[pyarrow]', 'double[pyarrow]', 'double[pyarrow]', 'double[pyarrow]']
+   open  high   low  close
+a   1.0   2.0   1.0    2.0
+b   3.0   3.0   3.0    3.0
+c  <NA>  <NA>  <NA>   <NA>
+int64[pyarrow] -> ['int64[pyarrow]', 'int64[pyarrow]', 'int64[pyarrow]', 'int64[pyarrow]']
+```
+
+(Group `c` in this run contained only a missing value.)
+
+**Check 2: pandas' own test suite and code checks**
+
+- New regression test `test_ohlc_pyarrow_dtypes` (`int64[pyarrow]` and `float64[pyarrow]`, with an all-missing group and `as_index=False`): **fails without the fix, passes with it** (checked by temporarily stashing the fix).
+- `python -m pytest pandas/tests/groupby/aggregate/test_aggregate.py -k ohlc -v`: **15 passed**, including both new test cases.
+- `python -m pytest pandas/tests/groupby/aggregate/test_aggregate.py pandas/tests/extension`: **43620 passed, 4206 skipped, 827 xfailed, 0 failed** in 66.64s.
+- `pre-commit run --files` on the 4 changed files: every hook **Passed** or **Skipped** (no files of that type).
+- `/pandas-review` ran `pandas/tests/groupby`, `pandas/tests/resample` and `pandas/tests/extension/test_arrow.py`: **52869 passed, 0 failed**.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: `pytest` in my `.venv-dev` build, `ruff` and `pre-commit` for code checks, and Claude Code's `/pandas-review` for an independent test run.
+- What it produced: the new test failing before and passing after the fix, 43620 passing tests in the related suites, and a clean pre-commit run.
+- Difficulties: my first edits had trailing spaces on two blank lines, which `ruff` reported and fixed ("Found 2 errors (2 fixed, 0 remaining)"). The skipped and xfailed counts also looked worrying at first, until I learned they are tests that do not apply to my setup or are known failures marked by pandas.
+- What changed: I removed the trailing spaces, re-ran `git diff --check` until it was clean, and then ran the full pre-commit hooks instead of only `ruff`, so the "All code checks passed" box in my PR is true.
 
 ---
 
