@@ -78,24 +78,22 @@ drafted, what you did with the draft.]
 
 ## Why I Chose This Issue
 
-[1-2 paragraphs in your own words: how you searched, what your scan
-surfaced, what your scout's verdict said, why this issue fits your
-profile, and what you hope to learn. If your scout's verdict on it
-was reject and you chose it anyway, say so here and say why; choosing
-against your own tool silently is what loses points. Close with an
-honest read of the tool itself: where the scout fell short on a real
-wild search and what you changed or would change, or what convinced
-you it held up. **Record the link to your claim comment in this section too.**
-Not claimed yet? Write `claim pending` and today's date where the link goes,
-and add the link the moment your claim lands.]
+I chose pandas issue #71940 because I use pandas in my data analysis work, and one detail made me curious. The same `groupby().ohlc()` call worked with `Float64` but raised a `ValueError` when I switched to `float64[pyarrow]`. That gave me a concrete question to investigate: could I get the correct open, high, low, and close values while keeping all four columns in the original PyArrow dtype?
+
+I found #71940 through my own GitHub search, outside the Issue Selection site. My scout hadn't graded it, so I read the issue history myself. Two earlier claims had expired, and the bot had closed PR #71975 because of an assignment issue. After checking that history, I claimed the issue before starting the fix. [My claim comment](https://github.com/pandas-dev/pandas/issues/71940#issuecomment-7090063326)
+
+I hope to learn how pandas handles PyArrow data inside `groupby` and what maintainers look for when reviewing a fix from an outside contributor.
+
+**My take on the scout**
+
+All five issues in my first scan already had pull requests, and `beam#19712` showed up as available in my search even though a fix had already landed. Those misses led me to add the `-linked:pr` filter and to reproduce each bug on `main` myself before trusting a verdict. With pandas #72215, the scout found an issue I could reproduce, but someone opened a PR before I claimed it. That experience changed the order I work in.
 
 **Toolkit**
 
-- Tool: issue-scout (your scout: your search strategy, your rubric),
-  and how you used it
-- What it produced: [the scan and its verdict on this issue, described]
-- Difficulties: [where it fell short, or "none met" if none did]
-- What changed: [what you patched or would update, or "nothing"]
+- Tool: I used `issue-scout` to run my GitHub search queries and grade issues I picked from the Issue Selection site.
+- What it produced: None of the five issues from my first scan passed. The scout also rejected three site picks and later accepted pandas #72215.
+- Difficulties: An open issue could already have a fix, and even a correct verdict about availability could go stale within a day.
+- What changed: I added `-linked:pr` to my searches. Now I read the issue history, claim an available issue, and reproduce the bug on `main` before writing a fix.
 
 ---
 
