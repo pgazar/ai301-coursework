@@ -158,7 +158,7 @@ The first build stopped with `CERTIFICATE_VERIFY_FAILED` while downloading `fast
 
 **Reproduction Evidence**
 
-- **Commit showing reproduction:** [5c3bc4d: fix and regression test](https://github.com/pgazar/pandas/commit/5c3bc4d0ee27ee425ee7dc09bfbc139ebf364f72). The traceback below records the failure before I made any changes; the linked commit contains my subsequent fix and regression test.
+- **Commit showing reproduction:** none. I reproduced the bug before making any commit; the traceback below is that pre-fix evidence. My fix and regression test came later, in [5c3bc4d](https://github.com/pgazar/pandas/commit/5c3bc4d0ee27ee425ee7dc09bfbc139ebf364f72).
 - **Screenshots/logs:** I saw the same error on the release, the nightly build, and my local source build. On the local build, I ran the example on `fix-groupby-ohlc-arrow` before changing the code. These are the relevant frames from that traceback, shortened for readability.
 
   ```text
@@ -217,23 +217,31 @@ I used two observable checks, both run on my source build (`3.2.0.dev0+737.g717b
 **Check 1: the reproduction, re-run before and after the fix**
 
 ```python
+import pandas as pd
+
 ser = pd.Series([1.0, 2.0, 3.0], dtype="float64[pyarrow]")
-ser.groupby(["a", "a", "b"]).ohlc()
+result = ser.groupby(["a", "a", "b"]).ohlc()
+print(pd.__version__)
+print(result)
+print(result.dtypes)
 ```
 
 - Before (main): `ValueError: Mask must be 1D array`.
-- After (my branch): the table is returned, and the columns keep the input dtype:
+- After (my branch, commit `5c3bc4d`): the exact snippet above prints the table, and every column keeps the input's Arrow dtype:
 
 ```text
-float64[pyarrow] -> ['double[pyarrow]', 'double[pyarrow]', 'double[pyarrow]', 'double[pyarrow]']
-   open  high   low  close
-a   1.0   2.0   1.0    2.0
-b   3.0   3.0   3.0    3.0
-c  <NA>  <NA>  <NA>   <NA>
-int64[pyarrow] -> ['int64[pyarrow]', 'int64[pyarrow]', 'int64[pyarrow]', 'int64[pyarrow]']
+3.2.0.dev0+737.g717bcd3eda
+   open  high  low  close
+a   1.0   2.0  1.0    2.0
+b   3.0   3.0  3.0    3.0
+open     double[pyarrow]
+high     double[pyarrow]
+low      double[pyarrow]
+close    double[pyarrow]
+dtype: object
 ```
 
-(Group `c` in this run contained only a missing value.)
+(The version string is from my editable build; it does not change with new commits on the branch.) The all-missing group and `int64[pyarrow]` are covered by `test_ohlc_pyarrow_dtypes` in Check 2.
 
 **Check 2: pandas' own test suite and code checks**
 
