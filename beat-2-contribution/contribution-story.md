@@ -104,26 +104,26 @@ and add the link the moment your claim lands.]
 
 **Problem Description**
 
-[In your own words, what is broken or missing?]
+When I ran `ohlc()` after `groupby()` on a `Float64` column, it worked. Changing only the dtype to `float64[pyarrow]` made the same call fail. The issue also affects `int64[pyarrow]` and can occur when calling `ohlc()` after `resample()`.
 
 **Expected Behavior**
 
-[What should happen?]
+I expected one row per group with four columns: `open`, `high`, `low`, and `close`. Each column should keep the input dtype, and a group containing only missing values should have `<NA>` in all four columns. The existing `test_ohlc_ea_dtypes` test checks that pandas preserves the input dtype for other extension types, so I expected the same behavior for PyArrow.
 
 **Current Behavior**
 
-[What actually happens?]
+The call stops with `ValueError: Mask must be 1D array` before pandas returns a table. I reproduced the same error on pandas `3.1.1`, on the `3.2.0.dev0` nightly build, and on my own build from source.
 
 **Affected Components**
 
-[Which parts of the codebase are involved?]
+I traced the call from `GroupBy.ohlc` in `pandas/core/groupby/groupby.py`, which builds the result table, to `_groupby_op` and `_groupby_result_to_arrow` in `pandas/core/arrays/arrow/array.py`. The conversion fails because `ohlc()` produces a two-dimensional result with four values per group, while an Arrow array is one-dimensional. The error surfaces in `__arrow_array__` in `pandas/core/arrays/masked.py`.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: I read the traceback in my terminal, used claude.ai to help me understand the call sequence, and used `gh` to read the issue history and the closed PR #71975.
+- What it produced: I could follow the call across five files and see where `_groupby_result_to_arrow` tried to convert the four-column result before the error appeared in `masked.py`.
+- Difficulties: The error message mentioned only the mask, so it took some tracing to connect it back to `ohlc()`. The earlier PR avoided the error but returned `Float64`, which left me with one more question: what dtype should the result have?
+- What changed: After reading `test_ohlc_ea_dtypes`, I decided to check both the values and the dtype. For a `float64[pyarrow]` input, all four output columns should still be `float64[pyarrow]`.
 
 ---
 
