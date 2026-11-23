@@ -131,31 +131,61 @@ I traced the call from `GroupBy.ohlc` in `pandas/core/groupby/groupby.py`, which
 
 **Environment Setup**
 
-[What a stranger would need to stand this up: your operating system,
-the relevant versions (language, runtime, package manager, the project
-itself), and how you set the project up. Then the challenges you faced
-and how you solved them, or that none came up.]
+I started with a quick check on my M4 Mac using macOS and Python 3.14. A temporary virtual environment was set up at `/tmp/pd71940` with `pandas==3.1.1` and `pyarrow==26.0.1`. After the error reproduced there, it was also confirmed on the `3.2.0.dev0+736.gef7d968a25` nightly build from the scientific-python nightly wheels.
+
+To trace the error in the source code, I forked `pandas-dev/pandas` as `pgazar/pandas`. My first attempt to clone it into `~/Documents/codepath/A301` failed with `Operation not permitted`, so I cloned it into `~/projects/pandas`. There, I created `.venv-dev`, installed the build and test dependencies, and built pandas using Meson and Apple clang 16.
+
+The first build stopped with `CERTIFICATE_VERIFY_FAILED` while downloading `fast_float`. I installed `certifi`, pointed `SSL_CERT_FILE` to its certificate bundle with `export SSL_CERT_FILE=$(python -m certifi)`, and removed the incomplete `build-dev` directory. Rerunning `pip install -e . --no-build-isolation` succeeded and gave me pandas `3.2.0.dev0+737.g717bcd3eda`.
 
 **Steps to Reproduce**
 
-1. [Step 1]
-2. [Step 2]
-3. [Observed result]
+1. Create a clean environment and install the versions I used for the release check.
+
+   ```bash
+   python3.14 -m venv /tmp/pd71940
+   /tmp/pd71940/bin/python -m pip install pandas==3.1.1 pyarrow==26.0.1
+   ```
+
+2. Run this example. It uses the same three values and group labels for both calls, so the only thing that changes is the dtype.
+
+   ```bash
+   /tmp/pd71940/bin/python - <<'PY'
+   import pandas as pd
+
+   ser = pd.Series([1.0, 2.0, 3.0], dtype="float64[pyarrow]")
+   groups = ["a", "a", "b"]
+
+   print(pd.__version__)
+   print(ser.astype("Float64").groupby(groups).ohlc())
+   print(ser.groupby(groups).ohlc())
+   PY
+   ```
+
+3. Check the output. On pandas `3.1.1`, the `Float64` call prints a table with `open`, `high`, `low`, and `close` for groups `a` and `b`. The `float64[pyarrow]` call stops with `ValueError: Mask must be 1D array`.
 
 **Reproduction Evidence**
 
-- **Commit showing reproduction:** [link to commit in your fork]
-- **Screenshots/logs:** [if applicable]
-- **My findings:** [what you discovered during reproduction; an
-  honest, evidenced cannot-reproduce that led you to re-pick or ask
-  the maintainer belongs here and costs you nothing]
+- **Commit showing reproduction:** [5c3bc4d: fix and regression test](https://github.com/pgazar/pandas/commit/5c3bc4d0ee27ee425ee7dc09bfbc139ebf364f72). The traceback below records the failure before I made any changes; the linked commit contains my subsequent fix and regression test.
+- **Screenshots/logs:** I saw the same error on the release, the nightly build, and my local source build. On the local build, I ran the example on `fix-groupby-ohlc-arrow` before changing the code. These are the relevant frames from that traceback, shortened for readability.
+
+  ```text
+  pandas/core/groupby/groupby.py        in ohlc
+  pandas/core/groupby/ops.py            in _cython_operation
+  pandas/core/groupby/ops.py            in cython_operation
+  pandas/core/arrays/arrow/array.py     in _groupby_op
+  pandas/core/arrays/arrow/array.py     in _groupby_result_to_arrow
+  pandas/core/arrays/masked.py          in __arrow_array__
+  ValueError: Mask must be 1D array
+  ```
+
+- **My findings:** The traceback helped me see why the error mentioned a mask. `ohlc()` produces a two-dimensional result with four values per group. The conversion fails when pandas tries to put that result into a one-dimensional Arrow array. I also reproduced the failure with `int64[pyarrow]`.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: I used `venv` and `pip` to set up the environments, `gh` to fork pandas, and the Python traceback in my terminal to follow the failing call. claude.ai (Claude Opus 5.5) set up the `/tmp` quick-check environments and ran the nightly check on my machine; I ran the release check and the check on my own build.
+- What it produced: I had a small example I could run across all three versions and a `Float64` comparison that showed what the output should look like.
+- Difficulties: macOS blocked the first clone location, and certificate verification interrupted the source build while it was downloading `fast_float`.
+- What changed: Moving the clone to `~/projects/pandas` and setting `SSL_CERT_FILE` let me finish the build and trace the error in my own checkout.
 
 ---
 
