@@ -312,16 +312,15 @@ Opened PR #72280 (UTC date). The bot labeled it `Needs Issue Assignment` because
 
 **Technical Skills Gained**
 
-[What you learned technically, named concretely.]
+I learned how to build pandas from source on my Mac and follow a traceback across several files. By tracing `ohlc()`, I could see where pandas tried to convert a four-column result into a one-dimensional Arrow array. I also wrote a regression test that failed on `main` and passed on my branch, checking both the values and their PyArrow dtype.
 
 **Challenges Overcome**
 
-[What was hard and how you solved it; point at the real events, the
-Toolkit blocks above are full of them.]
+The hardest part was deciding what to do when the review flagged a case where the position of `NaN` affected the `high` and `low` values. The review showed the same behavior with `Float64`, which helped me understand that it came from the shared calculation. I documented it in the PR as a known limitation and kept my fix focused on the Arrow conversion.
 
 **What I'd Do Differently Next Time**
 
-[Reflection on your process.]
+I spent time reproducing pandas issue #72215, only to find that someone had opened a PR before I claimed it. Next time, I'll check the issue history, post `/take` as a standalone comment, and confirm the bot assigned the issue to me before I start reproducing it.
 
 ---
 
