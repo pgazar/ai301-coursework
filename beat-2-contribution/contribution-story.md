@@ -66,10 +66,9 @@ I did not install the voice guard or write a repo-memory file this unit, so noth
 
 I did not install the ship-gate or write a ship manifest. Before opening my PR, I gated my real branch with pandas' own checks: `pytest` (43620 passed, 0 failed), `pre-commit` on the four changed files (all passed), and `/pandas-review` in a fresh Claude Code session (`NITS ONLY`). These caught two trailing-space errors and a release note that said "numeric" when decimals still fail, so I fixed both and amended my commit. What fell short is that my checks were never written down ahead of time, so I ran `ruff` alone first and only later the full `pre-commit`; a manifest would have listed both from the start.
 
-**Unit 8: [one line on the tool work]**
+**Unit 8: Ran the PR monitor on PR #72280 and followed its wait note (2026-11-22)**
 
-[2-4 sentences: the PR-monitor and your playbook. What it read, what it
-drafted, what you did with the draft.]
+I installed the PR monitor and wrote my playbook from real pandas data: five recent merged PRs from outside contributors got a first maintainer response in 0.1–2.6 days, so I set a seven-day wait before my one follow-up. The monitor's `--state` labeled my PR `FEEDBACK-IN` even though the only comment was the pandas bot's assignment notice, so I added a playbook rule that bot comments are not reviews. On the full run, it applied that rule and drafted "No reply... a wait note" instead of a response, and I did not post anything. It also suggested I comment `/take` on #71940, but I had already done that and the issue was assigned to me, which the monitor could not see from the PR thread.
 
 ---
 
