@@ -58,16 +58,13 @@ one in the week it belongs to.
 
 I installed the issue-scout and wrote four `gh search issues` queries from my fit profile (Python first, then data projects: pandas, SQLFluff, Great Expectations), ranked by fewest comments. My first scan rejected all five picks for nobody-has-it. I opened sqlfluff#9026 and saw two linked PRs (#9027, #9035), so the rubric was right, and my strategy was the problem: "fewest comments, newest first" chose brand-new issues whose reporters had already opened PRs. I added `-linked:pr` to every query, which removed all five, but I found it also hides issues with only abandoned PRs (arrow#39149) and misses issues already fixed without a link (beam#19712, fixed by #39079), so next I want a date filter in my queries and a rubric check that the bug still reproduces on main.
 
-**Unit 6: [one line on the tool work]**
+**Unit 6: Posted my claim without the voice guard, and the bot missed it (2026-11-22)**
 
-[2-4 sentences: the voice-guard, the repo-memory file. What broke or
-fell short, and what changed because of it. "Nothing broke" counts when
-it is true - say how you know.]
+I did not install the voice guard or write a repo-memory file this unit, so nothing checked my claim before I posted it on GitHub's website. That fell short twice: I first posted the claim on the wrong issue (#72215) and had to delete it, and on #71940 I put my explanation on the line right after `/take`, so the pandas bot never assigned me the issue. I posted a plain `/take` and was assigned; if I set the guard up now, my first Upstream rule would be "post `/take` as its own comment, then explain in a separate one."
 
-**Unit 7: [one line on the tool work]**
+**Unit 7: Used pre-commit, pytest and pandas-review as my gate instead of the ship-gate (2026-11-22)**
 
-[2-4 sentences: the ship-gate and your gate manifest. What it produced
-on your real branch, what fought you, what changed because of it.]
+I did not install the ship-gate or write a ship manifest. Before opening my PR, I gated my real branch with pandas' own checks: `pytest` (43620 passed, 0 failed), `pre-commit` on the four changed files (all passed), and `/pandas-review` in a fresh Claude Code session (`NITS ONLY`). These caught two trailing-space errors and a release note that said "numeric" when decimals still fail, so I fixed both and amended my commit. What fell short is that my checks were never written down ahead of time, so I ran `ruff` alone first and only later the full `pre-commit`; a manifest would have listed both from the start.
 
 **Unit 8: [one line on the tool work]**
 
