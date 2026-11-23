@@ -193,29 +193,27 @@ The first build stopped with `CERTIFICATE_VERIFY_FAILED` while downloading `fast
 
 **Analysis**
 
-[Your analysis of the root cause: what is causing the issue, traced
-to the files and functions involved.]
+I traced the failure to the step after pandas calculates the four `ohlc()` values. For a PyArrow column, `_groupby_op` in `pandas/core/arrays/arrow/array.py` converts the input to a pandas masked type such as `Float64`, runs the aggregation, and passes the result to `_groupby_result_to_arrow`. That works for `sum()` or `mean()` because each group produces one value. With `ohlc()`, each group produces four values, so `__arrow_array__` in `pandas/core/arrays/masked.py` receives a two-dimensional mask and PyArrow raises `ValueError: Mask must be 1D array`.
 
 **Proposed Solution**
 
-[High-level description of your fix approach, and what you are
-deliberately NOT changing.]
+I changed `_groupby_result_to_arrow` to pass the two-dimensional masked result back to `GroupBy.ohlc`, where pandas can build the four-column table. The earlier PR stopped there, which fixed the crash but left the output as `Float64` (or `Int64` for integer input), so I added `astype(obj.dtype)` to restore the input dtype on the finished table. I left the order-dependent `high` and `low` results for `NaN` values alone because that behavior comes from the Cython kernel in `groupby.pyx`, and the review showed it also occurs with `Float64`. I kept the fix scoped to PyArrow integer and float columns. Decimal columns still raise `NotImplementedError`, and other aggregations continue to use their existing conversion path.
 
 **Implementation Plan**
 
-1. [Modify file X to do Y]
-2. [Add or change Z]
-3. [Update tests]
+1. In `array.py`, update `_groupby_result_to_arrow` to return the two-dimensional masked result directly.
+2. In `groupby.py`, update `GroupBy.ohlc` to cast the finished table back to the input dtype.
+3. Add `test_ohlc_pyarrow_dtypes` next to `test_ohlc_ea_dtypes`. Check the values and dtypes for PyArrow integer and float inputs, including a group containing only missing values and a call with `as_index=False`.
+4. Add a whatsnew entry describing the fix for pandas users.
 
-[Record deviations here as they happen: what changed mid-build and
-why. A recorded deviation is honest work; silent drift is not.]
+Deviations: My first release note said "numeric," which was too broad because it implied decimal support. After review, I changed it to "integer and float" and added `Resampler.ohlc` next to `DataFrameGroupBy.ohlc` and `SeriesGroupBy.ohlc`. Ruff also removed two trailing spaces from my edits.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: I used claude.ai to plan the fix, then ran Claude Code's `/pandas-review` in a fresh session with Fable 5.2 on high.
+- What it produced: The review returned `NITS ONLY` with two optional findings. Its test run finished with 52,869 passed and 0 failed.
+- Difficulties: I had to decide whether the `NaN` finding belonged in this fix. The review showed the same `high` and `low` behavior with `Float64`, which helped me identify it as a separate issue in the shared kernel.
+- What changed: I corrected the release note and documented the `NaN` behavior as a known limitation in the PR.
 
 ---
 
