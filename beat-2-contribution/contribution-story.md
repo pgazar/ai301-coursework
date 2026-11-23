@@ -1,4 +1,4 @@
-# Contribution: [Issue Title]
+# Contribution: BUG: groupby/resample ohlc raises ValueError for pyarrow numeric dtypes
 
 Path: `beat-2-contribution/contribution-story.md`
 
@@ -8,11 +8,10 @@ format criteria grade exactly that. Your course repo link is the whole submissio
 files and no evidence uploads are part of Assignment 5.
 
 **Contribution Number:** [1]
-**Student:** [Student name]
-**GitHub Username:** [your GitHub username, exactly as it appears on your profile - no @, no
-profile URL. Your comments upstream are identified by this name.]
-**Issue:** [GitHub issue link]
-**Pull Request:** [GitHub PR link, once opened]
+**Student:** Pegah
+**GitHub Username:** pgazar
+**Issue:** https://github.com/pandas-dev/pandas/issues/71940
+**Pull Request:** https://github.com/pandas-dev/pandas/pull/72280
 
 One repository, built across units 5 to 8, telling the whole story of your real
 contribution. Fill it as you work, not at the end — the sections below ask for evidence that
@@ -283,27 +282,22 @@ built, decisions you made when you made them, wrong turns included.]
 
 ## Pull Request
 
-**PR Link:** [GitHub PR URL when opened]
+**PR Link:** https://github.com/pandas-dev/pandas/pull/72280
 
-**PR Description:** [what the PR says; much of the content above
-adapts into it]
+**PR Description:** The description opens with the two-line reproduction (`ValueError: Mask must be 1D array` on main), explains the two changes (`_groupby_result_to_arrow` returns the two-dimensional masked result, and `GroupBy.ohlc` casts the result back to the input's `ArrowDtype`), and reports the testing (`test_ohlc_pyarrow_dtypes` fails on main and passes on the branch; 43620 passed, 0 failed). It records one known limitation (order-dependent `high`/`low` for unmasked `NaN` in Arrow float columns, which `Float64` shares), discloses the AI tools used (claude.ai with Claude Opus 5.5, and Claude Code with Fable 5.2 (high) for `/pandas-review`, which reported `NITS ONLY`), says `closes #71940`, and completes pandas' checklist.
 
 **Maintainer Feedback:**
 
-- [Date]: [feedback received, or "none yet"; silence is a normal
-  state and costs you nothing]
-- [Date]: [how you addressed it]
+- 2026-11-23: none yet. The pandas bot labeled the PR `Needs Issue Assignment` because the bot had not assigned me the issue (my first claim comment had text after `/take`). I posted a plain `/take` (https://github.com/pandas-dev/pandas/issues/71940#issuecomment-7091668306), and the issue is now assigned to `pgazar`; pandas' daily job removes the label once the assignment is in place. CI: 42 checks passed, 0 failed, the rest still running at the time of writing.
 
-**Status:** [Awaiting review / Iterating / Merged / Closed. The
-status is a fact you record, never a grade: the PR is graded as
-opened.]
+**Status:** Awaiting review
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: `gh` to fork pandas, push my branch, and open the PR page (`gh pr create --web`), with pandas' PR template and checklist; the pandas assignment bot then checked the PR.
+- What it produced: PR #72280 linked to #71940 with `closes #71940`, and a bot comment and `Needs Issue Assignment` label because the issue was not yet assigned to me.
+- Difficulties: my first claim comment had my explanation on the line right after `/take`, so the bot never assigned the issue, and I only found out when the PR was labeled.
+- What changed: I posted a plain `/take` on its own, and the issue was assigned to `pgazar`. Next time I will post `/take` alone first and explain in a separate comment.
 
 ---
 
