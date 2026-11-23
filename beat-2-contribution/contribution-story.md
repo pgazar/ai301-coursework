@@ -54,9 +54,9 @@ happened; these entries are the toolkit's own timeline.
 All four entries are graded. Keep every heading below, and fill each
 one in the week it belongs to.
 
-**Unit 5: [one line on the tool work]**
+**Unit 5: Built the issue-scout, ran one scan, and fixed my search strategy (2026-11-06)**
 
-[I installed the issue-scout and wrote four `gh search issues` queries from my fit profile (Python first, then data projects: pandas, SQLFluff, Great Expectations), ranked by fewest comments. My first scan rejected all five picks for nobody-has-it. I opened sqlfluff#9026 and saw two linked PRs (#9027, #9035), so the rubric was right, and my strategy was the problem: "fewest comments, newest first" chose brand-new issues whose reporters had already opened PRs. I added `-linked:pr` to every query, which removed all five, but I found it also hides issues with only abandoned PRs (arrow#39149) and misses issues already fixed without a link (beam#19712, fixed by #39079), so next I want a date filter in my queries and a rubric check that the bug still reproduces on main.]
+I installed the issue-scout and wrote four `gh search issues` queries from my fit profile (Python first, then data projects: pandas, SQLFluff, Great Expectations), ranked by fewest comments. My first scan rejected all five picks for nobody-has-it. I opened sqlfluff#9026 and saw two linked PRs (#9027, #9035), so the rubric was right, and my strategy was the problem: "fewest comments, newest first" chose brand-new issues whose reporters had already opened PRs. I added `-linked:pr` to every query, which removed all five, but I found it also hides issues with only abandoned PRs (arrow#39149) and misses issues already fixed without a link (beam#19712, fixed by #39079), so next I want a date filter in my queries and a rubric check that the bug still reproduces on main.
 
 **Unit 6: [one line on the tool work]**
 
@@ -258,23 +258,32 @@ int64[pyarrow] -> ['int64[pyarrow]', 'int64[pyarrow]', 'int64[pyarrow]', 'int64[
 
 ## Implementation Notes
 
-[A running log, added to as you work. Date each entry. What you
-built, decisions you made when you made them, wrong turns included.]
+**2026-11-06**
 
-**[Date]**
+Installed the issue-scout, wrote four `gh search issues` queries, and ran my first scan: 0 of 5 accepted, all five sqlfluff issues already had PRs. Checked sqlfluff#9026 by hand and confirmed the linked PRs (#9027, #9035). Added `-- -linked:pr` to my queries and graded three Issue Selection site picks (airflow#60172, airflow#61667, arrow#51265); all were rejected for nobody-has-it. Found that `beam#19712` was already fixed on main by PR #39079 without a link to the issue.
 
-[Entry]
+**2026-11-20**
 
-**[Date]**
+Looked at Apache Hamilton issues (#786 is an umbrella issue, #572 already had a draft PR). My scout accepted pandas#72215 (`resample().asfreq(fill_value=...)` ignored for PeriodIndex), and I reproduced it on pandas 3.1.1.
 
-[Entry]
+**2026-11-22**
+
+Before I posted a claim on #72215, PR #72270 was opened for it, so I dropped it. Found #71940: two earlier `/take` claims had expired and PR #71975 had been closed by the bot only because of assignment. Reproduced the bug on pandas 3.1.1 and on the 3.2.0.dev0 nightly. Wrong turn: I first posted my claim comment on #72215 by mistake, deleted it, and posted it on #71940.
+
+Forked pandas and cloned into `~/projects/pandas` after macOS blocked the clone in `~/Documents`. The first source build failed with `CERTIFICATE_VERIFY_FAILED`; fixed with `certifi` and `SSL_CERT_FILE`. Reproduced on my own build, then made the two changes (`_groupby_result_to_arrow` and `GroupBy.ohlc`), added `test_ohlc_pyarrow_dtypes`, and added a whatsnew entry. Decided to keep the output in the input's `ArrowDtype` instead of `Float64`, following `test_ohlc_ea_dtypes`. Ran 43620 tests (0 failed); `ruff` fixed two trailing-space errors I had added. Committed `5c3bc4d` on `fix-groupby-ohlc-arrow`.
+
+Ran `/pandas-review` in a fresh Claude Code session (Fable 5.2, high): `NITS ONLY`. Changed the whatsnew wording from "numeric" to "integer and float" and added `Resampler.ohlc`; left the `NaN` high/low finding out of scope as a known limitation. `pre-commit` passed on all four files.
+
+**2026-11-23**
+
+Opened PR #72280 (UTC date). The bot labeled it `Needs Issue Assignment` because my first claim comment had text after `/take`. Posted a plain `/take`, and the issue was assigned to `pgazar`. CI: 42 checks passed, 0 failed so far.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: `git` on the `fix-groupby-ohlc-arrow` branch, VS Code for the edits, and claude.ai (Claude Opus 5.5) for step-by-step guidance.
+- What it produced: commit `5c3bc4d`, 4 files and 33 added lines (two source files, one test, one whatsnew line).
+- Difficulties: I added trailing spaces on blank lines more than once, and I posted my claim on the wrong issue.
+- What changed: I now run `git diff --check` before committing, and I check the issue number in the address bar before posting a comment.
 
 ---
 
@@ -318,10 +327,9 @@ Toolkit blocks above are full of them.]
 
 ## Resources Used
 
-[What actually helped, not a reading list. List things this story
-already shows you using: the doc you followed to set the environment
-up, the thread that explained the bug, the person who answered you.
-One real entry beats ten plausible ones.]
-
-- [Link to documentation that helped]
-- [Discussion, issue, or post that helped]
+- pandas contributing guide, especially "Issue assignment and the pull request lifecycle" (`/take`, the 7-day rule) and the automated contributions policy: https://pandas.pydata.org/docs/dev/development/contributing.html
+- pandas `AGENTS.md` (disclosing the AI tools I used and marking AI-written text): https://github.com/pandas-dev/pandas/blob/main/AGENTS.md
+- The `pandas-review` skill I ran before opening the PR: https://github.com/pandas-dev/pandas/blob/main/.agents/skills/pandas-review/SKILL.md
+- The issue thread for #71940 and the closed PR #71975, which showed me the earlier attempt and why it was closed: https://github.com/pandas-dev/pandas/issues/71940, https://github.com/pandas-dev/pandas/pull/71975
+- The existing test `test_ohlc_ea_dtypes` in `pandas/tests/groupby/aggregate/test_aggregate.py`, which I used as the model for the expected dtype and for my new test
+- claude.ai (Claude Opus 5.5), which guided me step by step through setup, the fix, and the PR
